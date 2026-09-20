@@ -1,0 +1,53 @@
+{
+  "aliases": {
+    "阿衡": "aheng",
+    "阿衡OS": "aheng_os",
+    "财主": "tycoon",
+    "村中质疑者": "skeptic",
+    "小孩们": "children",
+    "村民": "villagers",
+    "旁白": "narrator"
+  },
+  "voices": {
+    "aheng": {
+      "description": "阿衡",
+      "reference_id_env": "FISH_AUDIO_REFERENCE_ID_AHENG",
+      "speech_rate": 3.0
+    },
+    "aheng_os": {
+      "description": "阿衡OS",
+      "reference_id_env": "FISH_AUDIO_REFERENCE_ID_AHENG_OS",
+      "speech_rate": 3.0
+    },
+    "tycoon": {
+      "description": "财主",
+      "reference_id_env": "FISH_AUDIO_REFERENCE_ID_TYCOON",
+      "speech_rate": 3.5
+    },
+    "skeptic": {
+      "description": "村中质疑者",
+      "reference_id_env": "FISH_AUDIO_REFERENCE_ID_SKEPTIC",
+      "speech_rate": 4.0
+    },
+    "children": {
+      "description": "儿童群体",
+      "reference_id_env": "FISH_AUDIO_REFERENCE_ID_CHILDREN",
+      "speech_rate": 4.5
+    },
+    "villagers": {
+      "description": "村民群体",
+      "reference_id_env": "FISH_AUDIO_REFERENCE_ID_VILLAGERS",
+      "speech_rate": 4.0
+    },
+    "narrator": {
+      "description": "旁白",
+      "reference_id_env": "FISH_AUDIO_REFERENCE_ID_NARRATOR",
+      "speech_rate": 3.0
+    }
+  },
+  "timing": {
+    "line_gap": 0.35,
+    "scene_gap": 1.5,
+    "action_duration": 1.0
+  }
+}
