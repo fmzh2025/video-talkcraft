@@ -253,6 +253,81 @@ agent 读方法论、选动效配方卡、写 [Remotion](https://www.remotion.de
 - demo 里的主持人素材（`demos/_lib/dh-host.webm`）是 AI 生成的演示形象占位，
   生产时请替换为你自己的人物素材。
 
+## 🎭 多角色音频
+
+除原有单人 `tts_fishaudio.py` 外，`scripts/build_audio.py` 支持传统剧本的角色编排：
+它按 `script_roles.json` 的时间轴逐句调用 Fish Audio、将不同 `reference_id` 的独立 WAV
+放入时间轴并混成 `audio/full.wav`，随后对最终混音重新运行 `timestamps_cpu.py` 和
+`make_timing.py`。Fish Audio 返回的单句 alignment 不会代替最终 alignment。
+
+```bash
+python3 scripts/build_audio.py \
+  --script script.json --roles script_roles.json --out audio
+```
+
+`script.json` 保持既有格式：
+
+```json
+{"sentences": ["孩子们的台词。", "质疑者的台词。"]}
+```
+
+`script_roles.json` 只保存角色到环境变量的映射和时间轴：
+
+```json
+{
+  "voice_cast": {
+    "children": {"description": "儿童群体", "reference_id_env": "FISH_AUDIO_REFERENCE_ID_CHILDREN"},
+    "skeptic": {"description": "质疑者", "reference_id_env": "FISH_AUDIO_REFERENCE_ID_SKEPTIC"}
+  },
+  "timeline": [
+    {"sentence_index": 0, "speaker": "children", "start": 0, "end": 4},
+    {"sentence_index": 1, "speaker": "skeptic", "start": 5, "end": 9}
+  ]
+}
+```
+
+需要配置 `FISH_AUDIO_API_KEY` 和每个角色对应的 `FISH_AUDIO_REFERENCE_ID_*`。
+默认重叠报错；有意做多人同时说话时才使用 `--allow-overlap`。输出目录还会包含
+`lines/*.wav`、`audio_report.json` 和 `audio_timeline.svg`，完整参数见
+`python3 scripts/build_audio.py --help`。
+
+### 从 Markdown 剧本生成音频工程
+
+第二阶段增加了 `scripts/parse_script.py` 和根目录 `build.py`。每集只需编辑
+`episodes/ep01/script.md`；长期复用的角色别名、语速和 Fish Audio reference 环境变量放在
+仓库根目录 `voices.json`（也可以在每集目录放同名文件覆盖）。解析器只提取原文对白，动作说明只进入
+时间轴，不会生成或改写旁白。时间轴是 `estimated`，用于人工确认，不是最终 alignment。
+
+```bash
+# 生成 generated/script.json、script_roles.json、timeline.json 和 SVG，查看后人工确认
+python3 build.py episodes/ep01
+
+# 确认 generated/* 后生成 audio/full.wav、timestamps.json 和 timing.json
+python3 build.py episodes/ep01 --all --confirm
+```
+
+支持的 Markdown 形式是 `## 1-1 山村溪口 日 外` 场景标题，以及 `人物：台词` 或
+人物名单独一行后接台词；`旁白`、`OS`、群体人物都通过 `voices.json` 的 aliases 映射。
+如需只重建工程数据，可使用 `--force-parse`；源剧本或 `voices.json` 变化后会按 hash 重新解析并要求重新审核。
+
+`voices.json` 的每个角色必须有 `reference_id_env` 或直接 `reference_id`。推荐前者，实际 ID 放在 `.env`：
+
+```json
+{
+  "aliases": {"阿衡": "aheng", "阿衡OS": "aheng_os"},
+  "voices": {
+    "aheng": {
+      "description": "阿衡",
+      "reference_id_env": "FISH_AUDIO_REFERENCE_ID_AHENG",
+      "speech_rate": 3.0
+    }
+  }
+}
+```
+
+估时按角色字符/秒、标点停顿、句间留白、场景留白和动作占位计算；输出中明确标记
+`timing_confidence: estimated`。`build_audio.py` 会使用生成的 `duration` 保留尾部留白，真实音频时长仍以 Fish Audio 返回的 WAV 为准。
+
 ## 🙏 致谢
 
 - **[Remotion](https://www.remotion.dev/)**——驱动全部渲染的 React 视频框架

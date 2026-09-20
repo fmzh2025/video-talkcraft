@@ -79,6 +79,13 @@ pip install requests python-dotenv   # 还需 ffmpeg，生成前会检查
 python3 scripts/tts_fishaudio.py script.json audio/full.wav audio/timestamps.json --timing-out remotion/src/timing.json
 ```
 - tts_fishaudio.py：默认 `--mode sentence` 每句一次请求，插入 `--pause-sec` 指定的真实静音（默认 0.25 秒）；`--mode stream` 整稿一次请求、保留自然停顿。两者均接收 UTF-8 SSE，生成结束才写文件，不提供流式播放。先解码 PCM 再拼接，偏移按采样数计算。空音频、缺失/无效对齐或文本不匹配时报错；只忽略标点、大小写与字符宽度，不自动转换数字读法。中文用接口字级锚点，英文词内插值；`match/ok` 仅确认文本映射，仍需试听。合成后若再预剪，须重新运行 CPU 对齐。
+- **多角色剧本（可选）**：`scripts/build_audio.py` 读取 `script.json` + `script_roles.json`，按 `timeline.start/end` 逐句调用同一个 Fish Audio 请求实现、从每个角色的 `reference_id_env` 取音色，落盘 `audio/lines/*.wav`，再以 PCM 相加混成固定时长的 mono 24kHz `audio/full.wav`。默认实际时长越过下一句 `start` 就 FAIL；明确的对白重叠才传 `--allow-overlap`。Fish 返回的单句时间戳不直接拼接，混音完成后仍必须对 `full.wav` 重跑本节的 `timestamps_cpu.py`，再用 `make_timing.py` 生成 timing。
+- 多角色命令：
+  ```bash
+  python3 scripts/build_audio.py --script script.json --roles script_roles.json --out audio
+  ```
+  `script_roles.json` 的 `timeline[].sentence_index` 必须覆盖 `script.json.sentences` 的每个索引；台词文本只来自 `sentences`，不要把人物名写进 TTS 文本。`voice_cast.<speaker>.reference_id_env` 指向 `.env` 中的 `FISH_AUDIO_REFERENCE_ID_*` 变量。输出还包括 `audio/audio_report.json` 和 `audio/audio_timeline.svg`；已有单句 WAV 可用 `--reuse-lines` 复用。需要只测试混音时可用 `--skip-alignment`，正式成片不要跳过对齐。
+- **Markdown 剧本解析层（可选）**：`python3 build.py episodes/ep01` 读取 `script.md` 和共享 `voices.json`，生成 `generated/script.json`、`script_roles.json`、`timeline.json` 与可人工检查的 SVG。解析器只提取人物台词，动作说明保留为静音/留白事件；时间值明确标为 estimated。审核生成文件后运行 `python3 build.py episodes/ep01 --all --confirm`，它再调用上面的多角色音频和最终 alignment 流程。源剧本或 voices 配置改变后必须重新审核。
 - timestamps_cpu.py：ASR 词级时间戳 → 与口播稿字符级对齐（**CJK 是可靠锚点**，
   匹配键=繁简归一+无声调拼音，同音字不算错；拉丁词各家 ASR 都常拼错，在锚点间插值）→
   每句 match 质检，<0.90 标出人工听核。默认后端 FireRedASR2-CTC（尾部最稳、零误报；整段喂入 ~200s 崩、内存平方涨，脚本默认按静音切 ≤75s 段再加回偏移，`--chunk-sec` 可调），备选 faster-whisper；

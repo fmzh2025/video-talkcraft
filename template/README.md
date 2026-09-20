@@ -41,5 +41,9 @@ lib.tsx（keyframes/DirBlur/缓动/drift）、components.tsx（Subtitles 整句�
 
 ## 音频时间戳
 
-TTS 合成/数字人生成是制作端输入，不在本库（2026-08-28 定版）。字级时间戳用库内
-`scripts/timestamps_cpu.py`（本机 CPU，FireRedASR2-CTC 默认 / faster-whisper 备选，+ 口播稿逐字对齐）。
+TTS 合成/数字人生成仍是制作端步骤；单人 Fish Audio 入口是
+`scripts/tts_fishaudio.py`，多角色时间轴编排入口是 `scripts/build_audio.py`。
+若源稿是 Markdown 剧本，可先用根目录 `python3 build.py episodes/ep01` 生成并审核
+`generated/` 下的工程数据，再用 `python3 build.py episodes/ep01 --all --confirm` 进入完整音频流水线。
+两者最终都使用库内 `scripts/timestamps_cpu.py`（本机 CPU，FireRedASR2-CTC 默认 /
+faster-whisper 备选，+ 口播稿逐字对齐），再由 `scripts/make_timing.py` 生成 `timing.json`。
