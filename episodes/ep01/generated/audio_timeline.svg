@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1350" height="733" viewBox="0 0 1350 733">
+<style>text{font-family:Arial,"Noto Sans CJK SC",sans-serif;fill:#182230}.muted{fill:#607080;font-size:12px}.label{font-size:14px;font-weight:600}.small{font-size:11px}</style>
+<rect width="100%" height="100%" fill="#f7f9fc"/>
+<text x="190" y="24" class="label">Audio timeline · 90.000s</text>
+<text x="190" y="44" class="muted">duration source: specified</text>
+<line x1="190.00" y1="56" x2="190.00" y2="431" stroke="#d8e0ea"/>
+<text x="192.00" y="48" class="muted">0</text>
+<line x1="314.44" y1="56" x2="314.44" y2="431" stroke="#d8e0ea"/>
+<text x="316.44" y="48" class="muted">10</text>
+<line x1="438.89" y1="56" x2="438.89" y2="431" stroke="#d8e0ea"/>
+<text x="440.89" y="48" class="muted">20</text>
+<line x1="563.33" y1="56" x2="563.33" y2="431" stroke="#d8e0ea"/>
+<text x="565.33" y="48" class="muted">30</text>
+<line x1="687.78" y1="56" x2="687.78" y2="431" stroke="#d8e0ea"/>
+<text x="689.78" y="48" class="muted">40</text>
+<line x1="812.22" y1="56" x2="812.22" y2="431" stroke="#d8e0ea"/>
+<text x="814.22" y="48" class="muted">50</text>
+<line x1="936.67" y1="56" x2="936.67" y2="431" stroke="#d8e0ea"/>
+<text x="938.67" y="48" class="muted">60</text>
+<line x1="1061.11" y1="56" x2="1061.11" y2="431" stroke="#d8e0ea"/>
+<text x="1063.11" y="48" class="muted">70</text>
+<line x1="1185.56" y1="56" x2="1185.56" y2="431" stroke="#d8e0ea"/>
+<text x="1187.56" y="48" class="muted">80</text>
+<line x1="1310.00" y1="56" x2="1310.00" y2="431" stroke="#d8e0ea"/>
+<text x="1312.00" y="48" class="muted">90</text>
+<line x1="190.00" y1="56" x2="190.00" y2="431" stroke="#7a8798" stroke-width="1.5"/>
+<line x1="606.89" y1="56" x2="606.89" y2="431" stroke="#7a8798" stroke-width="1.5"/>
+<title>Scene 1-1: 0.000-33.500s</title>
+<line x1="606.89" y1="56" x2="606.89" y2="431" stroke="#7a8798" stroke-width="1.5"/>
+<line x1="1017.56" y1="56" x2="1017.56" y2="431" stroke="#7a8798" stroke-width="1.5"/>
+<title>Scene 1-2: 33.500-66.500s</title>
+<line x1="1017.56" y1="56" x2="1017.56" y2="431" stroke="#7a8798" stroke-width="1.5"/>
+<line x1="1310.00" y1="56" x2="1310.00" y2="431" stroke="#7a8798" stroke-width="1.5"/>
+<title>Scene 1-3: 66.500-90.000s</title>
+<text x="18" y="93" class="label">children</text>
+<line x1="190" y1="112" x2="1310" y2="112" stroke="#e4e9f0"/>
+<text x="18" y="141" class="label">villagers</text>
+<line x1="190" y1="160" x2="1310" y2="160" stroke="#e4e9f0"/>
+<text x="18" y="189" class="label">tycoon</text>
+<line x1="190" y1="208" x2="1310" y2="208" stroke="#e4e9f0"/>
+<text x="18" y="237" class="label">aheng</text>
+<line x1="190" y1="256" x2="1310" y2="256" stroke="#e4e9f0"/>
+<text x="18" y="285" class="label">aheng_os</text>
+<line x1="190" y1="304" x2="1310" y2="304" stroke="#e4e9f0"/>
+<rect x="190.00" y="76" width="43.69" height="24" rx="3" fill="#2f6fed"><title>#0 children 0.000-3.511s 深山白鹿，见者得富贵——获者改命数！</title></rect>
+<rect x="238.05" y="124" width="45.17" height="24" rx="3" fill="#d44a3a"><title>#1 villagers 3.861-7.491s 鹿若真在山里，早被旁人得去了。</title></rect>
+<rect x="287.58" y="172" width="47.40" height="24" rx="3" fill="#1a9c70"><title>#2 tycoon 7.841-11.650s 鹿出没的道儿，你早该报上来。</title></rect>
+<rect x="339.33" y="172" width="37.97" height="24" rx="3" fill="#1a9c70"><title>#3 tycoon 12.000-15.051s 报出路，这些，都是你的。</title></rect>
+<rect x="381.66" y="220" width="11.78" height="24" rx="3" fill="#8b5cf6"><title>#4 aheng 15.401-16.348s 未必。</title></rect>
+<rect x="397.80" y="220" width="33.76" height="24" rx="3" fill="#8b5cf6"><title>#5 aheng 16.698-19.411s 得鹿者，未必肯说。</title></rect>
+<rect x="606.89" y="124" width="42.93" height="24" rx="3" fill="#d44a3a"><title>#6 villagers 33.500-36.950s 追了半辈子……连个影儿都没。</title></rect>
+<rect x="1017.56" y="220" width="11.78" height="24" rx="3" fill="#8b5cf6"><title>#7 aheng 66.500-67.447s 未必。</title></rect>
+<rect x="1033.70" y="220" width="39.66" height="24" rx="3" fill="#8b5cf6"><title>#8 aheng 67.797-70.984s 得鹿的人，未必肯说……</title></rect>
+<rect x="1077.71" y="268" width="66.95" height="24" rx="3" fill="#d28a18"><title>#9 aheng_os 71.334-76.714s 可我追了半生，连一句“见过”都没挣上。</title></rect>
+<text x="18" y="322" class="label">Scenes</text>
+<text x="18" y="353" class="small">1-1  0.000-33.500s  duration=33.500s  specified  1-1 山村溪口 日/外 {duration=33.5}</text>
+<text x="18" y="378" class="small">1-2  33.500-66.500s  duration=33.000s  specified  1-2 深山兽径 昏/外 {duration=33}</text>
+<text x="18" y="403" class="small">1-3  66.500-90.000s  duration=23.500s  specified  1-3 溪边宿地 夜/外 {duration=23.5}</text>
+<text x="18" y="425" class="label">Lines</text>
+<text x="18" y="456" class="small">#0  children  0.000-3.511s  深山白鹿，见者得富贵——获者改命数！</text>
+<text x="18" y="482" class="small">#1  villagers  3.861-7.491s  鹿若真在山里，早被旁人得去了。</text>
+<text x="18" y="508" class="small">#2  tycoon  7.841-11.650s  鹿出没的道儿，你早该报上来。</text>
+<text x="18" y="534" class="small">#3  tycoon  12.000-15.051s  报出路，这些，都是你的。</text>
+<text x="18" y="560" class="small">#4  aheng  15.401-16.348s  未必。</text>
+<text x="18" y="586" class="small">#5  aheng  16.698-19.411s  得鹿者，未必肯说。</text>
+<text x="18" y="612" class="small">#6  villagers  33.500-36.950s  追了半辈子……连个影儿都没。</text>
+<text x="18" y="638" class="small">#7  aheng  66.500-67.447s  未必。</text>
+<text x="18" y="664" class="small">#8  aheng  67.797-70.984s  得鹿的人，未必肯说……</text>
+<text x="18" y="690" class="small">#9  aheng_os  71.334-76.714s  可我追了半生，连一句“见过”都没挣上。</text>
+</svg>

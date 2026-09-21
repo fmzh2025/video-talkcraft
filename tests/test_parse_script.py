@@ -98,6 +98,70 @@ class ParseScriptTests(unittest.TestCase):
         self.assertIn("沿着兽迹", actions[0]["text"])
         self.assertNotIn("沿着兽迹", [event["text"] for event in dialogue])
 
+    def test_scene_duration_parses_slash_heading_and_forms_90_second_timeline(self):
+        temp, root, script, voices = self.files()
+        self.addCleanup(temp.cleanup)
+        explicit = SCRIPT.replace(
+            "## 1-1 山村溪口 日 外", "## 1-1 山村溪口 日/外 {duration=33.5}"
+        ).replace(
+            "## 1-2 深山兽径 昏 外", "## 1-2 深山兽径 昏/外 {duration=33}"
+        ).replace(
+            "## 1-3 溪边宿地 夜 外", "## 1-3 溪边宿地 夜/外 {duration=23.5}"
+        )
+        script.write_text(explicit, encoding="utf-8")
+        catalog = parse_script.load_voices(voices)
+        _, scenes = parse_script.parse_markdown(script, catalog)
+        self.assertEqual([scene.duration for scene in scenes], [33.5, 33.0, 23.5])
+        self.assertEqual([scene.time for scene in scenes], ["日", "昏", "夜"])
+        self.assertEqual([scene.setting for scene in scenes], ["外", "外", "外"])
+        timeline = parse_script.build_timeline("title", scenes, catalog)
+        self.assertEqual(timeline["duration_source"], "specified")
+        self.assertAlmostEqual(timeline["duration"], 90.0)
+        self.assertEqual(
+            [(row["start"], row["end"]) for row in timeline["scenes"]],
+            [(0.0, 33.5), (33.5, 66.5), (66.5, 90.0)],
+        )
+        self.assertEqual(timeline["dialogue"][0]["start"], 0.0)
+        self.assertEqual(timeline["dialogue"][0]["end"], 3.511)
+        self.assertEqual(timeline["dialogue"][-1]["end"], 69.687)
+        self.assertTrue(any(gap["reason"] == "scene_duration" for gap in timeline["gaps"]))
+
+    def test_scene_duration_does_not_stretch_dialogue(self):
+        temp, root, script, voices = self.files()
+        self.addCleanup(temp.cleanup)
+        catalog = parse_script.load_voices(voices)
+        _, old_scenes = parse_script.parse_markdown(script, catalog)
+        old_timeline = parse_script.build_timeline("title", old_scenes, catalog)
+        explicit = SCRIPT.replace(" 日 外", " 日/外 {duration=33.5}", 1)
+        explicit = explicit.replace(" 昏 外", " 昏/外 {duration=33}", 1)
+        explicit = explicit.replace(" 夜 外", " 夜/外 {duration=23.5}", 1)
+        script.write_text(explicit, encoding="utf-8")
+        _, new_scenes = parse_script.parse_markdown(script, catalog)
+        new_timeline = parse_script.build_timeline("title", new_scenes, catalog)
+        old_by_text = {row["text"]: row for row in old_timeline["dialogue"]}
+        new_by_text = {row["text"]: row for row in new_timeline["dialogue"]}
+        old_scene_starts = {scene["scene_id"]: scene["start"] for scene in old_timeline["scenes"]}
+        new_scene_starts = {scene["scene_id"]: scene["start"] for scene in new_timeline["scenes"]}
+        for text, old_row in old_by_text.items():
+            new_row = new_by_text[text]
+            self.assertEqual(new_row["estimated_duration"], old_row["estimated_duration"])
+            self.assertAlmostEqual(
+                new_row["start"] - new_scene_starts[new_row["scene_id"]],
+                old_row["start"] - old_scene_starts[old_row["scene_id"]],
+            )
+
+    def test_scene_duration_shorter_than_content_fails(self):
+        temp, root, script, voices = self.files()
+        self.addCleanup(temp.cleanup)
+        script.write_text(
+            "## 1-1 村口 日/外 {duration=0.5}\n\n阿衡：\n未必。\n",
+            encoding="utf-8",
+        )
+        catalog = parse_script.load_voices(voices)
+        _, scenes = parse_script.parse_markdown(script, catalog)
+        with self.assertRaisesRegex(parse_script.ParseError, r"Scene 1-1 duration is too short"):
+            parse_script.build_timeline("title", scenes, catalog)
+
     def test_alias_parenthetical_and_os_normalize_to_canonical_speakers(self):
         temp, root, script, voices = self.files()
         self.addCleanup(temp.cleanup)
@@ -129,6 +193,7 @@ class ParseScriptTests(unittest.TestCase):
         _, scenes = parse_script.parse_markdown(script, catalog)
         timeline = parse_script.build_timeline("title", scenes, catalog)
         self.assertEqual(timeline["timing_confidence"], "estimated")
+        self.assertEqual(timeline["duration_source"], "estimated")
         self.assertGreater(timeline["estimated_duration"], sum(row["estimated_duration"] for row in timeline["dialogue"]))
         reasons = {gap["reason"] for gap in timeline["gaps"]}
         self.assertIn("line_gap", reasons)

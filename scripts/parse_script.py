@@ -44,6 +44,7 @@ SETTING_WORDS = {
     "内": "内", "外": "外", "内外": "内外", "INT": "内", "INT.": "内",
     "EXT": "外", "EXT.": "外", "INT/EXT": "内外", "INT./EXT.": "内外",
 }
+SCENE_DURATION_RE = re.compile(r"\s*\{duration\s*=\s*([0-9]+(?:\.[0-9]+)?)\}\s*$", re.IGNORECASE)
 HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+(.+?)\s*$")
 SPEAKER_ONLY_RE = re.compile(r"^\s*([^:#\n][^:\n]{0,60}?)\s*[：:]\s*$")
 SPEAKER_INLINE_RE = re.compile(r"^\s*([^:#\n][^:\n]{0,60}?)\s*[：:]\s*(.+?)\s*$")
@@ -100,6 +101,7 @@ class Scene:
     events: list[dict[str, Any]] = field(default_factory=list)
     start: float = 0.0
     end: float = 0.0
+    duration: float | None = None
 
 
 def read_json(path: Path) -> Any:
@@ -229,12 +231,30 @@ def load_voices(path: Path) -> VoiceCatalog:
 
 
 def parse_scene_heading(text: str, source_line: int, scene_number: int) -> Scene | None:
-    tokens = text.strip().split()
+    original = text.strip()
+    duration: float | None = None
+    duration_match = SCENE_DURATION_RE.search(original)
+    if duration_match:
+        duration = number(float(duration_match.group(1)), "scene duration", minimum=0.001)
+        heading_text = original[:duration_match.start()].strip()
+    else:
+        heading_text = original
+        if "{duration" in original.lower():
+            raise ParseError(
+                f"Invalid scene duration in heading at line {source_line}: {original}"
+            )
+
+    tokens = heading_text.split()
     if not tokens:
         return None
     first_is_id = bool(re.match(r"^(?:\d+(?:[-.]\d+)+|S\d+[A-Za-z0-9_-]*)$", tokens[0], re.IGNORECASE))
-    setting_token = tokens[-1].upper() if tokens else ""
-    time_token = tokens[-2] if len(tokens) >= 2 else ""
+    slash_time_setting = re.fullmatch(r"([^/\s]+)/([^/\s]+)", tokens[-1]) if tokens else None
+    if slash_time_setting:
+        time_token = slash_time_setting.group(1)
+        setting_token = slash_time_setting.group(2).upper()
+    else:
+        setting_token = tokens[-1].upper() if tokens else ""
+        time_token = tokens[-2] if len(tokens) >= 2 else ""
     is_scene = first_is_id or (time_token in SCENE_TIME_WORDS and setting_token in SETTING_WORDS)
     if not is_scene:
         return None
@@ -242,10 +262,12 @@ def parse_scene_heading(text: str, source_line: int, scene_number: int) -> Scene
     body = tokens[1:] if first_is_id else tokens
     setting = SETTING_WORDS.get(setting_token, "")
     time = time_token if setting else ""
-    if setting:
+    if slash_time_setting:
+        body = body[:-1]
+    elif setting:
         body = body[:-2]
-    location = " ".join(body).strip() or text.strip()
-    return Scene(scene_id, text.strip(), location, time, setting, source_line)
+    location = " ".join(body).strip() or heading_text
+    return Scene(scene_id, original, location, time, setting, source_line, duration=duration)
 
 
 def is_stage_direction(text: str) -> bool:
@@ -388,6 +410,7 @@ def build_timeline(title: str, scenes: list[Scene], catalog: VoiceCatalog) -> di
     gaps: list[dict[str, Any]] = []
     cursor = 0.0
     sentence_index = 0
+    has_scene_durations = any(scene.duration is not None for scene in scenes)
 
     def add_gap(start: float, end: float, reason: str, scene_id: str) -> None:
         if end - start > EPSILON:
@@ -397,8 +420,14 @@ def build_timeline(title: str, scenes: list[Scene], catalog: VoiceCatalog) -> di
     for scene_index, scene in enumerate(scenes):
         if scene_index > 0:
             previous = cursor
-            cursor += catalog.scene_gap
-            add_gap(previous, cursor, "scene_gap", scene.scene_id)
+            previous_scene = scenes[scene_index - 1]
+            if not (
+                has_scene_durations
+                and previous_scene.duration is not None
+                and scene.duration is not None
+            ):
+                cursor += catalog.scene_gap
+                add_gap(previous, cursor, "scene_gap", scene.scene_id)
         scene_start = cursor
         previous_kind = "scene"
         scene_actions: list[dict[str, Any]] = []
@@ -446,8 +475,25 @@ def build_timeline(title: str, scenes: list[Scene], catalog: VoiceCatalog) -> di
             sentence_index += 1
             cursor = end
             previous_kind = "dialogue"
-        scene.start = round(scene_start, 3)
-        scene.end = round(cursor, 3)
+        content_end = cursor
+        if scene.duration is not None:
+            required = content_end - scene_start
+            if scene.duration + EPSILON < required:
+                raise ParseError(
+                    f"Scene {scene.scene_id} duration is too short. "
+                    f"planned={scene.duration:.3f}s, required={required:.3f}s"
+                )
+            scene.start = round(scene_start, 3)
+            scene.end = round(scene_start + scene.duration, 3)
+            cursor = scene.end
+            gap_end = content_end
+            if scene_index < len(scenes) - 1 and scenes[scene_index + 1].duration is not None:
+                gap_end = min(content_end + catalog.scene_gap, cursor)
+                add_gap(content_end, gap_end, "scene_gap", scene.scene_id)
+            add_gap(gap_end, cursor, "scene_duration", scene.scene_id)
+        else:
+            scene.start = round(scene_start, 3)
+            scene.end = round(content_end, 3)
 
     scene_rows = []
     dialogue_by_scene = {scene.scene_id: [] for scene in scenes}
@@ -461,8 +507,11 @@ def build_timeline(title: str, scenes: list[Scene], catalog: VoiceCatalog) -> di
         scene_actions = actions_by_scene[scene.scene_id]
         scene_points = [point for row in scene_dialogue for point in (row["start"], row["end"])]
         scene_points.extend(point for action in scene_actions for point in (action["start"], action["end"]))
-        start = min(scene_points) if scene_points else scene.start
-        end = max(scene_points) if scene_points else scene.end
+        if scene.duration is not None:
+            start, end = scene.start, scene.end
+        else:
+            start = min(scene_points) if scene_points else scene.start
+            end = max(scene_points) if scene_points else scene.end
         scene_rows.append({
             "scene_id": scene.scene_id,
             "heading": scene.heading,
@@ -472,12 +521,22 @@ def build_timeline(title: str, scenes: list[Scene], catalog: VoiceCatalog) -> di
             "source_line": scene.source_line,
             "start": round(start, 3),
             "end": round(end, 3),
+            "duration": round(end - start, 3),
+            "duration_planned": scene.duration,
+            "duration_source": "specified" if scene.duration is not None else "estimated",
             "dialogue_indices": dialogue_by_scene[scene.scene_id],
             "actions": scene_actions,
         })
     return {
         "title": title,
+        "scene_duration_schema": "v1",
         "timing_confidence": "estimated",
+        "duration_source": (
+            "specified"
+            if all(scene.duration is not None for scene in scenes)
+            else "mixed" if any(scene.duration is not None for scene in scenes) else "estimated"
+        ),
+        "duration": round(cursor, 3),
         "estimated_duration": round(cursor, 3),
         "scenes": scene_rows,
         "dialogue": dialogue,
@@ -515,6 +574,7 @@ def _tick_step(duration: float) -> float:
 
 def write_audio_timeline_svg(path: Path, timeline: dict[str, Any]) -> None:
     rows = timeline["dialogue"]
+    scenes = timeline.get("scenes", [])
     roles: list[str] = []
     for row in rows:
         if row["speaker"] not in roles:
@@ -522,8 +582,10 @@ def write_audio_timeline_svg(path: Path, timeline: dict[str, Any]) -> None:
     duration = max(float(timeline["estimated_duration"]), 1.0)
     left, plot_width, right = 190, 1120, 40
     header, row_height, detail_top = 64, 48, 64 + len(roles) * 48 + 32
+    scene_detail_row = 25
+    lines_top = detail_top + max(1, len(scenes)) * scene_detail_row + 28
     detail_row = 26
-    height = detail_top + max(1, len(rows)) * detail_row + 34
+    height = lines_top + max(1, len(rows)) * detail_row + 34
     scale = plot_width / duration
     role_index = {role: index for index, role in enumerate(roles)}
     colors = ["#2f6fed", "#d44a3a", "#1a9c70", "#8b5cf6", "#d28a18", "#0f766e"]
@@ -533,14 +595,20 @@ def write_audio_timeline_svg(path: Path, timeline: dict[str, Any]) -> None:
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{left + plot_width + right}" height="{height}" viewBox="0 0 {left + plot_width + right} {height}">',
         '<style>text{font-family:Arial,"Noto Sans CJK SC",sans-serif;fill:#182230}.muted{fill:#607080;font-size:12px}.label{font-size:14px;font-weight:600}.small{font-size:11px}</style>',
         '<rect width="100%" height="100%" fill="#f7f9fc"/>',
-        f'<text x="{left}" y="24" class="label">Estimated audio timeline · {duration:.3f}s</text>',
-        f'<text x="{left}" y="44" class="muted">estimated only · edit script_roles.json before TTS</text>',
+        f'<text x="{left}" y="24" class="label">Audio timeline · {duration:.3f}s</text>',
+        f'<text x="{left}" y="44" class="muted">duration source: {html.escape(timeline.get("duration_source", "estimated"))}</text>',
     ]
     for tick in range(int(math.floor(duration / step)) + 1):
         seconds = tick * step
         x = left + seconds * scale
-        out.append(f'<line x1="{x:.2f}" y1="56" x2="{x:.2f}" y2="{detail_top - 8}" stroke="#d8e0ea"/>')
+        out.append(f'<line x1="{x:.2f}" y1="56" x2="{x:.2f}" y2="{lines_top - 8}" stroke="#d8e0ea"/>')
         out.append(f'<text x="{x + 2:.2f}" y="48" class="muted">{seconds:g}</text>')
+    for scene in scenes:
+        start_x = left + scene["start"] * scale
+        end_x = left + scene["end"] * scale
+        out.append(f'<line x1="{start_x:.2f}" y1="56" x2="{start_x:.2f}" y2="{lines_top - 8}" stroke="#7a8798" stroke-width="1.5"/>')
+        out.append(f'<line x1="{end_x:.2f}" y1="56" x2="{end_x:.2f}" y2="{lines_top - 8}" stroke="#7a8798" stroke-width="1.5"/>')
+        out.append(f'<title>Scene {html.escape(scene["scene_id"])}: {scene["start"]:.3f}-{scene["end"]:.3f}s</title>')
     for role, index in role_index.items():
         y = header + index * row_height
         out.append(f'<text x="18" y="{y + 29}" class="label">{html.escape(role)}</text>')
@@ -555,9 +623,15 @@ def write_audio_timeline_svg(path: Path, timeline: dict[str, Any]) -> None:
         if width >= 90:
             label = f"#{row['sentence_index']} {html.escape(row['text'][:18])}"
             out.append(f'<text x="{x + 5:.2f}" y="{y + 16}" fill="#fff" style="fill:#fff" class="small">{label}</text>')
-    out.append(f'<text x="18" y="{detail_top - 14}" class="label">Lines</text>')
+    out.append(f'<text x="18" y="{detail_top - 14}" class="label">Scenes</text>')
+    for index, scene in enumerate(scenes):
+        y = detail_top + index * scene_detail_row
+        detail = (f"{scene['scene_id']}  {scene['start']:.3f}-{scene['end']:.3f}s  "
+                  f"duration={scene['duration']:.3f}s  {scene['duration_source']}  {scene['heading']}")
+        out.append(f'<text x="18" y="{y + 17}" class="small">{html.escape(detail)}</text>')
+    out.append(f'<text x="18" y="{lines_top - 14}" class="label">Lines</text>')
     for index, row in enumerate(rows):
-        y = detail_top + index * detail_row
+        y = lines_top + index * detail_row
         detail = f"#{row['sentence_index']}  {row['speaker']}  {row['start']:.3f}-{row['end']:.3f}s  {row['text'][:72]}"
         out.append(f'<text x="18" y="{y + 17}" class="small">{html.escape(detail)}</text>')
     out.append("</svg>\n")
@@ -593,6 +667,7 @@ def parse_project(script_path: Path, voices_path: Path, out_dir: Path) -> dict[s
         "source_sha256": source_hash,
         "voices_sha256": voices_hash,
         "timing_confidence": "estimated",
+        "duration_source": timeline["duration_source"],
         "duration": timeline["estimated_duration"],
         "voice_cast": generated_voice_cast(catalog),
         "timeline": roles_timeline,
@@ -617,7 +692,17 @@ def generated_is_current(out_dir: Path, script_path: Path, voices_path: Path) ->
         return False
     try:
         data = read_json(timeline_path)
-        return data.get("source_sha256") == sha256_file(script_path) and data.get("voices_sha256") == sha256_file(voices_path)
+        return (
+            data.get("scene_duration_schema") == "v1"
+            and data.get("source_sha256") == sha256_file(script_path)
+            and data.get("voices_sha256") == sha256_file(voices_path)
+            and all(
+                isinstance(scene, dict)
+                and "duration" in scene
+                and "duration_source" in scene
+                for scene in data.get("scenes", [])
+            )
+        )
     except (ParseError, OSError, KeyError, TypeError):
         return False
 
@@ -634,6 +719,8 @@ def validate_generated(out_dir: Path) -> dict[str, Any]:
     timeline = read_json(timeline_path)
     if not isinstance(script, dict) or not isinstance(script.get("sentences"), list):
         raise ParseError("generated/script.json must contain sentences[]")
+    if not isinstance(timeline, dict):
+        raise ParseError("generated/timeline.json must contain an object")
     sentences = script["sentences"]
     if not sentences or any(not isinstance(text, str) or not text.strip() for text in sentences):
         raise ParseError("generated/script.json contains empty or invalid text")
@@ -690,12 +777,52 @@ def validate_generated(out_dir: Path) -> dict[str, Any]:
             overlaps.append((current["sentence_index"], following["sentence_index"]))
     if overlaps:
         raise ParseError(f"planned timeline overlaps: {overlaps}")
+
+    scene_rows = timeline.get("scenes")
+    if not isinstance(scene_rows, list) or not scene_rows:
+        raise ParseError("generated/timeline.json must contain scenes[]")
+    scene_map: dict[str, dict[str, Any]] = {}
+    previous_end = None
+    for position, scene in enumerate(scene_rows):
+        if not isinstance(scene, dict):
+            raise ParseError(f"timeline.scenes[{position}] must be an object")
+        scene_id = scene.get("scene_id")
+        if not isinstance(scene_id, str) or not scene_id or scene_id in scene_map:
+            raise ParseError(f"timeline.scenes[{position}] has invalid or duplicate scene_id")
+        start = number(scene.get("start"), f"timeline.scenes[{position}].start")
+        end = number(scene.get("end"), f"timeline.scenes[{position}].end")
+        duration = number(scene.get("duration", end - start), f"timeline.scenes[{position}].duration")
+        if end <= start or abs(duration - (end - start)) > EPSILON:
+            raise ParseError(f"timeline.scenes[{position}] duration does not match start/end")
+        if scene.get("duration_source") not in (None, "estimated", "specified"):
+            raise ParseError(f"timeline.scenes[{position}] has invalid duration_source")
+        if scene.get("duration_source") == "specified":
+            planned = number(scene.get("duration_planned"), f"timeline.scenes[{position}].duration_planned")
+            if abs(planned - duration) > EPSILON:
+                raise ParseError(f"timeline.scenes[{position}] duration differs from duration_planned")
+        scene_map[scene_id] = scene
+        if timeline.get("duration_source") == "specified" and previous_end is not None:
+            if abs(start - previous_end) > EPSILON:
+                raise ParseError("specified scene durations must form a continuous timeline")
+        previous_end = end
+    if timeline.get("duration_source") == "specified":
+        total = number(timeline.get("duration", timeline.get("estimated_duration")), "timeline.duration")
+        if abs(total - previous_end) > EPSILON:
+            raise ParseError("timeline.duration must equal the end of the final scene")
+    for row in timeline_rows:
+        scene = scene_map.get(row.get("scene_id"))
+        if scene is None:
+            raise ParseError(f"dialogue uses unknown scene: {row.get('scene_id')}")
+        if float(row["start"]) < float(scene["start"]) - EPSILON or float(row["end"]) > float(scene["end"]) + EPSILON:
+            raise ParseError(f"dialogue {row['sentence_index']} falls outside scene {row['scene_id']}")
     used = {row["speaker"] for row in rows}
     warnings = [f"unused voice: {key}" for key in sorted(set(roles["voice_cast"]) - used)]
     if not isinstance(timeline, dict) or timeline.get("timing_confidence") != "estimated":
         warnings.append("timeline.json has no estimated timing_confidence marker")
     return {
-        "scenes": len(timeline.get("scenes", [])) if isinstance(timeline, dict) else 0,
+        "scenes": len(scene_rows),
+        "scene_rows": scene_rows,
+        "duration_source": timeline.get("duration_source", "estimated"),
         "speakers": sorted(used),
         "speaker_labels": {
             speaker: sorted({row.get("speaker_label", speaker) for row in rows if row.get("speaker") == speaker})
@@ -715,6 +842,8 @@ def review_generated(out_dir: Path) -> dict[str, Any]:
     used = {row["speaker"] for row in rows}
     return {
         "scenes": len(data.get("scenes", [])),
+        "scene_rows": data.get("scenes", []),
+        "duration_source": data.get("duration_source", "estimated"),
         "speakers": sorted(used),
         "dialogue_lines": len(rows),
         "duration": float(data.get("estimated_duration", roles.get("duration", 0))),
@@ -735,7 +864,13 @@ def print_review(summary: dict[str, Any]) -> None:
     for speaker in summary["speakers"]:
         labels = ", ".join(summary.get("speaker_labels", {}).get(speaker, []))
         print(f"  {speaker} -> {labels or speaker}")
-    print(f"\nEstimated duration: {summary['duration']:.1f}s")
+    print("\nScenes:")
+    for scene in summary.get("scene_rows", []):
+        print(
+            f"  {scene['scene_id']:<8} {scene['start']:.1f} -> {scene['end']:.1f} "
+            f"({scene.get('duration', scene['end'] - scene['start']):.1f}s)"
+        )
+    print(f"\nTotal duration: {summary['duration']:.1f}s ({summary.get('duration_source', 'estimated')})")
     for warning in summary.get("warnings", []):
         print(f"WARNING: {warning}")
     print(f"\nPlease review:\n{summary['out_dir'] / 'script_roles.json'}\n{summary['out_dir'] / 'audio_timeline.svg'}")

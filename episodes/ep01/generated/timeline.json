@@ -1,0 +1,363 @@
+{
+  "title": "白鹿 EP01：山南山北尽寻鹿",
+  "scene_duration_schema": "v1",
+  "timing_confidence": "estimated",
+  "duration_source": "specified",
+  "duration": 90.0,
+  "estimated_duration": 90.0,
+  "scenes": [
+    {
+      "scene_id": "1-1",
+      "heading": "1-1 山村溪口 日/外 {duration=33.5}",
+      "location": "山村溪口",
+      "time": "日",
+      "setting": "外",
+      "source_line": 4,
+      "start": 0.0,
+      "end": 33.5,
+      "duration": 33.5,
+      "duration_planned": 33.5,
+      "duration_source": "specified",
+      "dialogue_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "actions": []
+    },
+    {
+      "scene_id": "1-2",
+      "heading": "1-2 深山兽径 昏/外 {duration=33}",
+      "location": "深山兽径",
+      "time": "昏",
+      "setting": "外",
+      "source_line": 24,
+      "start": 33.5,
+      "end": 66.5,
+      "duration": 33.0,
+      "duration_planned": 33.0,
+      "duration_source": "specified",
+      "dialogue_indices": [
+        6
+      ],
+      "actions": [
+        {
+          "kind": "action",
+          "scene_id": "1-2",
+          "text": "阿衡沿着兽迹前行。",
+          "source_line": 29,
+          "start": 36.95,
+          "end": 37.95,
+          "estimated_duration": 1.0
+        }
+      ]
+    },
+    {
+      "scene_id": "1-3",
+      "heading": "1-3 溪边宿地 夜/外 {duration=23.5}",
+      "location": "溪边宿地",
+      "time": "夜",
+      "setting": "外",
+      "source_line": 31,
+      "start": 66.5,
+      "end": 90.0,
+      "duration": 23.5,
+      "duration_planned": 23.5,
+      "duration_source": "specified",
+      "dialogue_indices": [
+        7,
+        8,
+        9
+      ],
+      "actions": []
+    }
+  ],
+  "dialogue": [
+    {
+      "sentence_index": 0,
+      "speaker": "children",
+      "speaker_label": "小孩们",
+      "text": "深山白鹿，见者得富贵——获者改命数！",
+      "scene_id": "1-1",
+      "source_line": 6,
+      "estimated_duration": 3.511,
+      "planned_start": 0.0,
+      "planned_end": 3.511,
+      "start": 0.0,
+      "end": 3.511,
+      "timing_confidence": "estimated"
+    },
+    {
+      "sentence_index": 1,
+      "speaker": "villagers",
+      "speaker_label": "村民",
+      "text": "鹿若真在山里，早被旁人得去了。",
+      "scene_id": "1-1",
+      "source_line": 9,
+      "estimated_duration": 3.63,
+      "planned_start": 3.861,
+      "planned_end": 7.491,
+      "start": 3.861,
+      "end": 7.491,
+      "timing_confidence": "estimated"
+    },
+    {
+      "sentence_index": 2,
+      "speaker": "tycoon",
+      "speaker_label": "财主",
+      "text": "鹿出没的道儿，你早该报上来。",
+      "scene_id": "1-1",
+      "source_line": 12,
+      "estimated_duration": 3.809,
+      "planned_start": 7.841,
+      "planned_end": 11.65,
+      "start": 7.841,
+      "end": 11.65,
+      "timing_confidence": "estimated"
+    },
+    {
+      "sentence_index": 3,
+      "speaker": "tycoon",
+      "speaker_label": "财主",
+      "text": "报出路，这些，都是你的。",
+      "scene_id": "1-1",
+      "source_line": 15,
+      "estimated_duration": 3.051,
+      "planned_start": 12.0,
+      "planned_end": 15.051,
+      "start": 12.0,
+      "end": 15.051,
+      "timing_confidence": "estimated"
+    },
+    {
+      "sentence_index": 4,
+      "speaker": "aheng",
+      "speaker_label": "阿衡（低声）",
+      "text": "未必。",
+      "scene_id": "1-1",
+      "source_line": 18,
+      "estimated_duration": 0.947,
+      "planned_start": 15.401,
+      "planned_end": 16.348,
+      "start": 15.401,
+      "end": 16.348,
+      "timing_confidence": "estimated"
+    },
+    {
+      "sentence_index": 5,
+      "speaker": "aheng",
+      "speaker_label": "阿衡",
+      "text": "得鹿者，未必肯说。",
+      "scene_id": "1-1",
+      "source_line": 21,
+      "estimated_duration": 2.713,
+      "planned_start": 16.698,
+      "planned_end": 19.411,
+      "start": 16.698,
+      "end": 19.411,
+      "timing_confidence": "estimated"
+    },
+    {
+      "sentence_index": 6,
+      "speaker": "villagers",
+      "speaker_label": "村民",
+      "text": "追了半辈子……连个影儿都没。",
+      "scene_id": "1-2",
+      "source_line": 26,
+      "estimated_duration": 3.45,
+      "planned_start": 33.5,
+      "planned_end": 36.95,
+      "start": 33.5,
+      "end": 36.95,
+      "timing_confidence": "estimated"
+    },
+    {
+      "sentence_index": 7,
+      "speaker": "aheng",
+      "speaker_label": "阿衡",
+      "text": "未必。",
+      "scene_id": "1-3",
+      "source_line": 33,
+      "estimated_duration": 0.947,
+      "planned_start": 66.5,
+      "planned_end": 67.447,
+      "start": 66.5,
+      "end": 67.447,
+      "timing_confidence": "estimated"
+    },
+    {
+      "sentence_index": 8,
+      "speaker": "aheng",
+      "speaker_label": "阿衡",
+      "text": "得鹿的人，未必肯说……",
+      "scene_id": "1-3",
+      "source_line": 36,
+      "estimated_duration": 3.187,
+      "planned_start": 67.797,
+      "planned_end": 70.984,
+      "start": 67.797,
+      "end": 70.984,
+      "timing_confidence": "estimated"
+    },
+    {
+      "sentence_index": 9,
+      "speaker": "aheng_os",
+      "speaker_label": "阿衡OS",
+      "text": "可我追了半生，连一句“见过”都没挣上。",
+      "scene_id": "1-3",
+      "source_line": 39,
+      "estimated_duration": 5.38,
+      "planned_start": 71.334,
+      "planned_end": 76.714,
+      "start": 71.334,
+      "end": 76.714,
+      "timing_confidence": "estimated"
+    }
+  ],
+  "actions": [
+    {
+      "kind": "action",
+      "scene_id": "1-2",
+      "text": "阿衡沿着兽迹前行。",
+      "source_line": 29,
+      "start": 36.95,
+      "end": 37.95,
+      "estimated_duration": 1.0
+    }
+  ],
+  "gaps": [
+    {
+      "start": 3.511,
+      "end": 3.861,
+      "duration": 0.35,
+      "reason": "line_gap",
+      "scene_id": "1-1"
+    },
+    {
+      "start": 7.491,
+      "end": 7.841,
+      "duration": 0.35,
+      "reason": "line_gap",
+      "scene_id": "1-1"
+    },
+    {
+      "start": 11.65,
+      "end": 12.0,
+      "duration": 0.35,
+      "reason": "line_gap",
+      "scene_id": "1-1"
+    },
+    {
+      "start": 15.051,
+      "end": 15.401,
+      "duration": 0.35,
+      "reason": "line_gap",
+      "scene_id": "1-1"
+    },
+    {
+      "start": 16.348,
+      "end": 16.698,
+      "duration": 0.35,
+      "reason": "line_gap",
+      "scene_id": "1-1"
+    },
+    {
+      "start": 19.411,
+      "end": 20.911,
+      "duration": 1.5,
+      "reason": "scene_gap",
+      "scene_id": "1-1"
+    },
+    {
+      "start": 20.911,
+      "end": 33.5,
+      "duration": 12.589,
+      "reason": "scene_duration",
+      "scene_id": "1-1"
+    },
+    {
+      "start": 36.95,
+      "end": 37.95,
+      "duration": 1.0,
+      "reason": "action",
+      "scene_id": "1-2"
+    },
+    {
+      "start": 37.95,
+      "end": 39.45,
+      "duration": 1.5,
+      "reason": "scene_gap",
+      "scene_id": "1-2"
+    },
+    {
+      "start": 39.45,
+      "end": 66.5,
+      "duration": 27.05,
+      "reason": "scene_duration",
+      "scene_id": "1-2"
+    },
+    {
+      "start": 67.447,
+      "end": 67.797,
+      "duration": 0.35,
+      "reason": "line_gap",
+      "scene_id": "1-3"
+    },
+    {
+      "start": 70.984,
+      "end": 71.334,
+      "duration": 0.35,
+      "reason": "line_gap",
+      "scene_id": "1-3"
+    },
+    {
+      "start": 76.714,
+      "end": 90.0,
+      "duration": 13.286,
+      "reason": "scene_duration",
+      "scene_id": "1-3"
+    }
+  ],
+  "source_sha256": "c423d7da2990fe3012cce8247b7df29483549e5bca068333554cc7279a63b038",
+  "voices_sha256": "a087bdbf00249d054f26bdc70e7a835b563306a2d8405d9bedd47e906c151802",
+  "voice_cast": {
+    "aheng": {
+      "description": "阿衡",
+      "speech_rate": 3.0,
+      "reference_id_env": "FISH_AUDIO_REFERENCE_ID_AHENG"
+    },
+    "aheng_os": {
+      "description": "阿衡OS",
+      "speech_rate": 3.0,
+      "reference_id_env": "FISH_AUDIO_REFERENCE_ID_AHENG_OS"
+    },
+    "tycoon": {
+      "description": "财主",
+      "speech_rate": 3.5,
+      "reference_id_env": "FISH_AUDIO_REFERENCE_ID_TYCOON"
+    },
+    "skeptic": {
+      "description": "村中质疑者",
+      "speech_rate": 4.0,
+      "reference_id_env": "FISH_AUDIO_REFERENCE_ID_SKEPTIC"
+    },
+    "children": {
+      "description": "儿童群体",
+      "speech_rate": 4.5,
+      "reference_id_env": "FISH_AUDIO_REFERENCE_ID_CHILDREN"
+    },
+    "villagers": {
+      "description": "村民群体",
+      "speech_rate": 4.0,
+      "reference_id_env": "FISH_AUDIO_REFERENCE_ID_VILLAGERS"
+    },
+    "narrator": {
+      "description": "旁白",
+      "speech_rate": 3.0,
+      "reference_id_env": "FISH_AUDIO_REFERENCE_ID_NARRATOR"
+    }
+  }
+}
