@@ -189,6 +189,28 @@ class BuildAudioTests(unittest.TestCase):
                     )
             self.assertFalse((root / "audio" / "full.wav").exists())
 
+    def test_actual_end_may_exceed_planned_end_before_next_line(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            script, roles = self.plan_files(root, timeline=[
+                {"sentence_index": 0, "speaker": "aheng", "start": 0, "end": 0.8},
+                {"sentence_index": 1, "speaker": "skeptic", "start": 1.5, "end": 2.5},
+            ])
+            with patch.dict(os.environ, {"TEST_REF_AHENG": "ref-a", "TEST_REF_SKEPTIC": "ref-s"}, clear=False):
+                outputs = build_audio.build_project(
+                    script,
+                    roles,
+                    root / "audio",
+                    "test-key",
+                    sample_rate=10,
+                    run_alignment_step=False,
+                    synthesize=self.fake_synth({0: 10, 1: 5}),
+                )
+            report = json.loads(outputs["report"].read_text(encoding="utf-8"))
+            self.assertEqual(report["lines"][0]["planned_end"], 0.8)
+            self.assertEqual(report["lines"][0]["actual_end"], 1.0)
+            self.assertTrue(outputs["full_wav"].exists())
+
     def test_alignment_runs_only_after_full_mix(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -310,12 +310,8 @@ def validate_timeline(rendered: list[RenderedLine], allow_overlap: bool) -> list
             "3. adjust TTS speed\n"
             "or pass --allow-overlap for intentional PCM mixing"
         )
-    for item in rendered:
-        if item.actual_end > item.plan.end + EPSILON:
-            raise ValueError(
-                f"Sentence {item.plan.sentence_index} exceeds its planned end.\n"
-                f"planned_end={item.plan.end:.3f}\nactual_end={item.actual_end:.3f}"
-            )
+    # planned_end is retained for reporting; only crossing the next line's
+    # planned start is a timing conflict.
     return overlaps
 
 
